@@ -1,7 +1,9 @@
 **🍽️ RMS Application - Restaurant Table & Food Booking**
+
 Welcome to the RMS Application, a user-friendly mobile application designed to revolutionize the dining experience! With RMS, users can effortlessly book dining tables and pre-order food at their favorite restaurants, ensuring a seamless and delightful dining experience.
 
 **🎯 Project Goal**
+
 The RMS Application aims to simplify restaurant reservations and food ordering by allowing users to:
 
 Reserve dining tables in advance.
@@ -9,6 +11,7 @@ Pre-order food to save time and enhance convenience.
 Enjoy a hassle-free dining experience with real-time updates.
 
 **✨ Features**
+
 Table Reservations: Book a dining table for a specific date and time with ease.
 Food Pre-Ordering: Browse the menu and pre-order food to have it ready upon arrival.
 User Authentication: Secure login and registration using Firebase Authentication.
