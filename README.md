@@ -108,8 +108,7 @@ Open a Pull Request.
 **📞 Contact**
 
 For questions or feedback, reach out to:
-Email: your-email@example.com
-GitHub: your-username
+GitHub: Bhavya2065
 
 **🌟 Acknowledgements**
 
