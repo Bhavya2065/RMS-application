@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rms_application/about_us.dart';
@@ -8,9 +9,11 @@ import 'package:rms_application/product_detail.dart';
 import 'package:rms_application/profile.dart';
 import 'dart:async';
 import 'package:rms_application/see_all.dart';
+import 'package:rms_application/sign_in.dart';
 import 'add_to_cart.dart';
 import 'favorite.dart';
 import 'models/food_category.dart';
+import 'models/product.dart';
 
 void main() {
   runApp(MyApp());
@@ -39,10 +42,10 @@ class FoodMenuScreen extends StatefulWidget {
 }
 
 class _FoodMenuScreenState extends State<FoodMenuScreen> {
-  List<Map<String, String>> favoriteItems = [];
+  List<Product> favoriteItems = [];
   int _selectedIndex = 0;
-  final String username = "John Doe"; // Replace with actual username logic
-  List<Map<String, dynamic>> cartItems = []; // List to store cart items
+  final String username = "John Doe";
+  List<Map<String, dynamic>> cartItems = [];
 
   final List<String> banners = [
     'assets/images/banner1.png',
@@ -60,7 +63,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
   late Timer bannerTimer;
   late PageController _pageController;
   String searchQuery = "";
-  late List<Map<String, String>> filteredItems;
+  late List<Product> filteredItems;
 
   @override
   void initState() {
@@ -86,7 +89,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
     super.dispose();
   }
 
-  List<Map<String, String>> getAllFoodItems() {
+  List<Product> getAllFoodItems() {
     return foodCategories.values.expand((list) => list).toList();
   }
 
@@ -99,49 +102,60 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
       setState(() {
         filteredItems = getAllFoodItems()
             .where((item) =>
-                item['name']!.toLowerCase().contains(query.toLowerCase()))
+            item.name.toLowerCase().contains(query.toLowerCase()))
             .toList();
       });
     }
   }
 
   void addToCart(Map<String, dynamic> item) {
-    // Check if the item is already in the cart
     final existingItemIndex = cartItems.indexWhere(
-      (cartItem) => cartItem['name'] == item['name'],
+          (cartItem) => cartItem['name'] == item['name'],
     );
 
     setState(() {
       if (existingItemIndex != -1) {
-        // If the item is already in the cart, increase its quantity
-        cartItems[existingItemIndex]['quantity'] += 1;
+        cartItems[existingItemIndex]['quantity'] =
+            (cartItems[existingItemIndex]['quantity'] as int) +
+                (item['quantity'] as int);
       } else {
-        // Otherwise, add the item with quantity = 1
-        cartItems.add({...item, 'quantity': 1});
+        cartItems.add({
+          'name': item['name'],
+          'image': item['image'],
+          'price': item['price'],
+          'discountedPrice': item['discountedPrice'].toString(),
+          'quantity': item['quantity'],
+        });
       }
     });
   }
 
   void adjustQuantity(Map<String, dynamic> item, int change) {
     final existingItemIndex = cartItems.indexWhere(
-      (cartItem) => cartItem['name'] == item['name'],
+          (cartItem) => cartItem['name'] == item['name'],
     );
 
-    if (existingItemIndex != -1) {
-      setState(() {
+    setState(() {
+      if (existingItemIndex != -1) {
         cartItems[existingItemIndex]['quantity'] += change;
-
-        // Remove item if quantity is 0
         if (cartItems[existingItemIndex]['quantity'] <= 0) {
           cartItems.removeAt(existingItemIndex);
         }
-      });
-    }
+      } else if (change > 0) {
+        cartItems.add({
+          'name': item['name'],
+          'image': item['image'],
+          'price': item['price'],
+          'discountedPrice': item['discountedPrice'],
+          'quantity': 1,
+        });
+      }
+    });
   }
 
   void removeFromFavorites(String itemName) {
     setState(() {
-      favoriteItems.removeWhere((item) => item['name'] == itemName);
+      favoriteItems.removeWhere((item) => item.name == itemName);
     });
   }
 
@@ -202,8 +216,16 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => FavoritePage(
-                      favoriteItems: favoriteItems,
-                      onRemoveFavorite: removeFromFavorites, // Pass function
+                      favoriteItems: favoriteItems
+                          .map((product) => {
+                        'name': product.name,
+                        'image': product.image,
+                        'price': product.price,
+                        'description': product.description,
+                        'discount': product.discount,
+                      })
+                          .toList(),
+                      onRemoveFavorite: removeFromFavorites,
                     ),
                   ),
                 );
@@ -212,25 +234,28 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
             ListTile(
               leading: Icon(Icons.logout),
               title: Text('Logout'),
-              onTap: () {},
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage(),));
+              },
             ),
             ListTile(
                 leading: Icon(Icons.exit_to_app),
                 title: Text('Exit'),
                 onTap: () {
-                  Navigator.of(context).pop(); // Close the drawer
+                  Navigator.of(context).pop();
                   Future.delayed(Duration(milliseconds: 200), () {
-                    // Delay to prevent issues when exiting from the drawer
-                    SystemNavigator.pop(); // Close the app
+                    SystemNavigator.pop();
                   });
-                }
-            ),
+                }),
           ],
         ),
       ),
-      backgroundColor: Color(0xFFEAF1DF),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFFEAF1DF),
+        title: Text('Home Page'),
+        centerTitle: true,
+        backgroundColor: Colors.green,
         iconTheme: IconThemeData(color: Colors.black),
         actions: [
           IconButton(
@@ -239,7 +264,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
               showSearch(
                   context: context,
                   delegate:
-                      FoodSearchDelegate(filteredItems, filterSearchResults));
+                  FoodSearchDelegate(filteredItems, filterSearchResults));
             },
           ),
         ],
@@ -342,7 +367,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
           Expanded(
             child: SingleChildScrollView(
               child: Container(
-                color: Color(0xFFEAF1DF),
+                color: Colors.white,
                 padding: EdgeInsets.all(16),
                 child: Column(
                   children: foodCategories.keys.map((category) {
@@ -357,15 +382,14 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        // Prevents layout shifts
-        backgroundColor: Color(0xFFEAF1DF),
+        backgroundColor: Colors.green,
         currentIndex: _selectedIndex,
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
           });
           switch (index) {
-            case 0: // Home
+            case 0:
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -373,7 +397,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                 ),
               );
               break;
-            case 1: // Cart
+            case 1:
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -381,39 +405,43 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                     cartItems: cartItems,
                     onNavigateBack: (int index) {
                       setState(() {
-                        _selectedIndex =
-                            index; // Update the BottomNavigationBar's selected index
+                        _selectedIndex = index;
                       });
                     },
                   ),
                 ),
               );
               break;
-            case 2: // Menu
+            case 2:
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => MenuCardPage(
-                    selectedIndex: _selectedIndex, // Pass current index
+                    selectedIndex: _selectedIndex,
                     onTabChange: (int index) {
                       setState(() {
-                        _selectedIndex = index; // Update tab in parent
-                      }); // Return to parent if needed
+                        _selectedIndex = index;
+                      });
                     },
                   ),
                 ),
               );
               break;
-            case 3: // Orders
+            case 3:
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      OrderPage(), // Replace with your orders page
+                  builder: (context) => OrderPage(
+                    onTabChange: (int index) {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                    },
+                  ),
                 ),
               );
               break;
-            case 4: // Profile
+            case 4:
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -422,7 +450,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                     onTabChange: (int index) {
                       setState(() {
                         _selectedIndex = index;
-                      }); // Return to parent page
+                      });
                     },
                   ),
                 ),
@@ -476,15 +504,14 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
             label: 'Profile',
           ),
         ],
-        selectedItemColor: Colors.green,
+        selectedItemColor: Colors.white,
         unselectedItemColor: Colors.black54,
-        iconSize: 24, // Fixed size for icons
+        iconSize: 24,
       ),
     );
   }
 
-  Widget buildFoodCategorySection(
-      String title, List<Map<String, String>> items) {
+  Widget buildFoodCategorySection(String title, List<Product> items) {
     return Column(
       children: [
         Row(
@@ -508,7 +535,18 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                   MaterialPageRoute(
                     builder: (context) => FoodDetailScreen(
                       categoryTitle: title,
-                      items: items,
+                      items: items
+                          .map((product) => {
+                        'name': product.name,
+                        'image': product.image,
+                        'price': product.price,
+                        'description': product.description,
+                        'discount': product.discount,
+                      })
+                          .toList(),
+                      cartItems: cartItems,
+                      addToCart: addToCart,
+                      adjustQuantity: adjustQuantity,
                     ),
                   ),
                 );
@@ -521,14 +559,13 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
           ],
         ),
         SizedBox(
-          height: 246,
+          height: 269,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
             itemBuilder: (context, index) {
-              final item = items[index];
-              return buildFoodItem(item['name']!, item['image']!,
-                  item['price']!, item['Description']!);
+              final product = items[index];
+              return buildFoodItem(product);
             },
           ),
         ),
@@ -537,15 +574,14 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
     );
   }
 
-  Widget buildFoodItem(
-      String name, String image, String price, String description) {
-    // Find the item in the cart to display its quantity
+  Widget buildFoodItem(Product product) {
     final cartItem = cartItems.firstWhere(
-      (item) => item['name'] == name,
+          (item) => item['name'] == product.name,
       orElse: () => {},
     );
-    final isFavorite = favoriteItems.any((item) => item['name'] == name);
+    final isFavorite = favoriteItems.any((item) => item.name == product.name);
     int quantity = cartItem.isNotEmpty ? cartItem['quantity'] : 0;
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -553,12 +589,17 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
           MaterialPageRoute(
             builder: (context) => ProductDetailPage(
               product: {
-                'name': name,
-                'image': image,
-                'price': price,
-                'description': description,
-                'quantity': quantity.toString()
+                'name': product.name,
+                'image': product.image,
+                'price': product.price,
+                'description': product.description,
+                'quantity': quantity.toString(),
+                'discount': product.discount,
+                'discountedPrice': product.discountedPrice.toStringAsFixed(2),
               },
+              cartItems: cartItems,
+              addToCart: addToCart,
+              adjustQuantity: adjustQuantity,
             ),
           ),
         );
@@ -583,6 +624,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
           child: Padding(
             padding: const EdgeInsets.all(10.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Stack(
                   children: [
@@ -592,7 +634,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Image.asset(
-                          image,
+                          product.image,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -608,17 +650,10 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                         onPressed: () {
                           setState(() {
                             if (isFavorite) {
-                              // Remove from favorites
                               favoriteItems
-                                  .removeWhere((item) => item['name'] == name);
+                                  .removeWhere((item) => item.name == product.name);
                             } else {
-                              // Add to favorites
-                              favoriteItems.add({
-                                'name': name,
-                                'image': image,
-                                'price': price,
-                                'description': description,
-                              });
+                              favoriteItems.add(product);
                             }
                           });
                         },
@@ -627,51 +662,91 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                   ],
                 ),
                 SizedBox(height: 5),
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                Center(
+                  child: Text(
+                    product.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
                 ),
                 SizedBox(height: 5),
-                Text(
-                  'Rs.$price.00',
-                  style: TextStyle(color: Colors.black),
-                ),
-                SizedBox(height: 5),
-
-                // Add Quantity Display with Increment and Decrement Buttons
-                quantity > 0
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            onPressed: () => adjustQuantity({'name': name}, -1),
-                            icon: Icon(Icons.remove, color: Colors.black),
-                          ),
-                          Text('$quantity',
-                              style: TextStyle(color: Colors.black)),
-                          IconButton(
-                            onPressed: () => adjustQuantity({'name': name}, 1),
-                            icon: Icon(Icons.add, color: Colors.black),
-                          ),
-                        ],
-                      )
-                    : ElevatedButton(
-                        onPressed: () {
-                          addToCart(
-                              {'name': name, 'image': image, 'price': price});
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                        ),
-                        child: Text(
-                          'Add To Cart',
-                          style: TextStyle(color: Colors.black),
-                        ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      '-${product.discount}%',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    SizedBox(width: 20),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Rs.${product.price}.00',
+                          style: TextStyle(
+                            color: Colors.grey.shade800,
+                            decoration: TextDecoration.lineThrough,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          'Rs.${product.discountedPrice.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Center(
+                  child: quantity > 0
+                      ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => adjustQuantity({'name': product.name}, -1),
+                        icon: Icon(Icons.remove, color: Colors.black),
+                      ),
+                      Text('$quantity',
+                          style: TextStyle(color: Colors.black)),
+                      IconButton(
+                        onPressed: () => adjustQuantity({'name': product.name}, 1),
+                        icon: Icon(Icons.add, color: Colors.black),
+                      ),
+                    ],
+                  )
+                      : ElevatedButton(
+                    onPressed: () {
+                      addToCart({
+                        'name': product.name,
+                        'image': product.image,
+                        'price': product.price,
+                        'discountedPrice': product.discountedPrice.toStringAsFixed(2),
+                        'quantity': 1,
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      minimumSize: Size(double.infinity, 40),
+                    ),
+                    child: Text(
+                      'Add To Cart',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -681,6 +756,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
   }
 
   Widget buildCartItem(Map<String, dynamic> cartItem) {
+    String price = cartItem['discountedPrice'] ?? cartItem['price'];
     return ListTile(
       leading: Image.asset(
         cartItem['image'],
@@ -689,7 +765,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
         fit: BoxFit.cover,
       ),
       title: Text(cartItem['name']),
-      subtitle: Text("Rs.${cartItem['price']} x ${cartItem['quantity']}"),
+      subtitle: Text("Rs.$price x ${cartItem['quantity']}"),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -718,7 +794,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
 }
 
 class FoodSearchDelegate extends SearchDelegate {
-  final List<Map<String, String>> foodItems;
+  final List<Product> foodItems;
   final Function(String) onSearch;
 
   FoodSearchDelegate(this.foodItems, this.onSearch);
@@ -749,18 +825,37 @@ class FoodSearchDelegate extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     final results = foodItems
-        .where(
-            (item) => item['name']!.toLowerCase().contains(query.toLowerCase()))
+        .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
         .toList();
 
     return ListView.builder(
       itemCount: results.length,
       itemBuilder: (context, index) {
-        final item = results[index];
+        final product = results[index];
         return ListTile(
-          title: Text(item['name']!),
-          subtitle: Text('Rs.${item['price']}'),
-          leading: Image.asset(item['image']!, width: 50, fit: BoxFit.cover),
+          title: Text(product.name),
+          subtitle: Row(
+            children: [
+              Text(
+                'Rs.${product.price}',
+                style: TextStyle(
+                  color: Colors.grey,
+                  decoration: TextDecoration.lineThrough,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Rs.${product.discountedPrice.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          leading: Image.asset(product.image, width: 50, fit: BoxFit.cover),
         );
       },
     );
@@ -769,18 +864,37 @@ class FoodSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     final suggestions = foodItems
-        .where(
-            (item) => item['name']!.toLowerCase().contains(query.toLowerCase()))
+        .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
         .toList();
 
     return ListView.builder(
       itemCount: suggestions.length,
       itemBuilder: (context, index) {
-        final item = suggestions[index];
+        final product = suggestions[index];
         return ListTile(
-          title: Text(item['name']!),
-          subtitle: Text('Rs.${item['price']}'),
-          leading: Image.asset(item['image']!, width: 50, fit: BoxFit.cover),
+          title: Text(product.name),
+          subtitle: Row(
+            children: [
+              Text(
+                'Rs.${product.price}',
+                style: TextStyle(
+                  color: Colors.grey,
+                  decoration: TextDecoration.lineThrough,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Rs.${product.discountedPrice.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          leading: Image.asset(product.image, width: 50, fit: BoxFit.cover),
         );
       },
     );

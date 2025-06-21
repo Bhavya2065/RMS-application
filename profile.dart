@@ -24,16 +24,11 @@ class _ProfilePageState extends State<ProfilePage> {
           'Profile',
           style: TextStyle(color: Colors.black),
         ),
-        backgroundColor: Color(0xFFEAF1DF),
+        centerTitle: true,
+        backgroundColor: Colors.green,
         iconTheme: IconThemeData(color: Colors.black),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          // onPressed: () {
-          //   if (widget.onTabChange != null) {
-          //     widget.onTabChange!(0); // Ensure navigation back to Home tab
-          //   }
-          //   Navigator.pop(context);
-          // },
           onPressed: () {
             Navigator.pop(context);
             widget.onTabChange(0); // Notify Home tab is selected
@@ -48,8 +43,8 @@ class _ProfilePageState extends State<ProfilePage> {
               margin: const EdgeInsets.only(top: 20),
               padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.green.shade100,
-                border: Border.all(color: Colors.green, width: 2),
+                color: Colors.white,
+                border: Border.all(color: Colors.green, width: 1),
                 borderRadius: const BorderRadius.all(Radius.circular(20)),
                 boxShadow: const [
                   BoxShadow(
@@ -143,40 +138,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
-      backgroundColor: Color(0xFFEAF1DF),
-      // bottomNavigationBar: BottomNavigationBar(
-      //   backgroundColor: Color(0xFFEAF1DF),
-      //   currentIndex: widget.selectedIndex,
-      //   onTap: (index) {
-      //     if (index == widget.selectedIndex) return; // Prevent redundant navigation
-      //     widget.onTabChange(index); // Notify parent about tab change
-      //   },
-      //   items: const [
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.home),
-      //       label: 'Home',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.shopping_cart),
-      //       label: 'Cart',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.menu_book),
-      //       label: 'Menu',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.list_alt),
-      //       label: 'Orders',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.person),
-      //       label: 'Profile',
-      //     ),
-      //   ],
-      //   selectedItemColor: Colors.green,
-      //   unselectedItemColor: Colors.black54,
-      //   type: BottomNavigationBarType.fixed,
-      // ),
+      backgroundColor: Colors.white,
     );
   }
 
@@ -190,8 +152,8 @@ class _ProfilePageState extends State<ProfilePage> {
       elevation: 3,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.green.shade100,
-          border: Border.all(color: Colors.green, width: 2),
+          color: Colors.white,
+          border: Border.all(color: Colors.green, width: 1),
           borderRadius: const BorderRadius.all(Radius.circular(10)),
         ),
         child: ListTile(

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'models/food_category.dart';
+import 'models/product.dart';
 
 class MenuCardPage extends StatefulWidget {
   final int selectedIndex;
-  final Function(int) onTabChange; // Callback to notify tab change
+  final Function(int) onTabChange;
 
   const MenuCardPage({
     super.key,
@@ -17,23 +18,23 @@ class MenuCardPage extends StatefulWidget {
 
 class _MenuCardPageState extends State<MenuCardPage> {
   String? _selectedCategory;
-  List<Map<String, String>> _filteredItems = [];
-  final FocusNode _dropdownFocusNode = FocusNode(); // Add FocusNode for dropdown
-  bool _isFocused = false; // Track focus state
+  List<Product> _filteredItems = [];
+  final FocusNode _dropdownFocusNode = FocusNode();
+  bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
     _dropdownFocusNode.addListener(() {
       setState(() {
-        _isFocused = _dropdownFocusNode.hasFocus; // Update focus state
+        _isFocused = _dropdownFocusNode.hasFocus;
       });
     });
   }
 
   @override
   void dispose() {
-    _dropdownFocusNode.dispose(); // Dispose FocusNode
+    _dropdownFocusNode.dispose();
     super.dispose();
   }
 
@@ -42,28 +43,28 @@ class _MenuCardPageState extends State<MenuCardPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Menu'),
-        backgroundColor: const Color(0xFFEAF1DF),
+        centerTitle: true,
+        backgroundColor: Colors.green,
         iconTheme: const IconThemeData(color: Colors.black),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context);
-            widget.onTabChange(0); // Notify Home tab is selected
+            widget.onTabChange(0);
           },
         ),
       ),
       body: Column(
         children: [
-          // Dropdown for category selection
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: DropdownButtonFormField<String>(
-              focusNode: _dropdownFocusNode, // Attach FocusNode
+              focusNode: _dropdownFocusNode,
               value: _selectedCategory,
               decoration: InputDecoration(
                 labelText: 'Select Food Category',
                 labelStyle: TextStyle(
-                  color: _isFocused ? Colors.green : Colors.black54, // Change color
+                  color: _isFocused ? Colors.green : Colors.black54,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -82,13 +83,13 @@ class _MenuCardPageState extends State<MenuCardPage> {
               onChanged: (String? newValue) {
                 setState(() {
                   _selectedCategory = newValue;
-                  _filteredItems =
-                      foodCategories[newValue] ?? []; // Update food items
+                  _filteredItems = foodCategories[newValue] ?? [];
+                  print('Selected category: $newValue');
+                  print('Items in category: $_filteredItems');
                 });
               },
             ),
           ),
-          // Display the menu items for the selected category
           Expanded(
             child: _filteredItems.isEmpty
                 ? Center(
@@ -112,44 +113,21 @@ class _MenuCardPageState extends State<MenuCardPage> {
           ),
         ],
       ),
-      backgroundColor: const Color(0xFFEAF1DF),
-      // bottomNavigationBar: BottomNavigationBar(
-      //     backgroundColor: Color(0xFFEAF1DF),
-      //   currentIndex: widget.selectedIndex,
-      //   onTap: (index) {
-      //     if (index == widget.selectedIndex) return; // Prevent redundant navigation
-      //     widget.onTabChange(index); // Notify parent widget about tab change
-      //   },
-      //   items: const [
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.home),
-      //       label: 'Home',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.shopping_cart),
-      //       label: 'Cart',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.menu_book),
-      //       label: 'Menu',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.list_alt),
-      //       label: 'Orders',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.person),
-      //       label: 'Profile',
-      //     ),
-      //   ],
-      //   selectedItemColor: Colors.green,
-      //   unselectedItemColor: Colors.black54,
-      //   type: BottomNavigationBarType.fixed,
-      // ),
+      backgroundColor: Colors.white,
     );
   }
 
-  Widget buildMenuItemCard(Map<String, String> item) {
+  Widget buildMenuItemCard(Product item) {
+    // Parse price and discount from String to double/int
+    final double price = double.tryParse(item.price) ?? 0.0;
+    final double discount = double.tryParse(item.discount) ?? 0.0;
+    final double discountedPrice = item.discountedPrice;
+
+    // Format the values for display
+    final String priceText = '₹${price.toStringAsFixed(2)}';
+    final String discountedPriceText = '₹${discountedPrice.toStringAsFixed(2)}';
+    final String discountText = '${discount.toStringAsFixed(0)}% OFF';
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
@@ -158,7 +136,7 @@ class _MenuCardPageState extends State<MenuCardPage> {
       elevation: 5,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.green.shade100,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.green),
         ),
@@ -167,25 +145,33 @@ class _MenuCardPageState extends State<MenuCardPage> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Food Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.asset(
-                  item['image'] ?? '',
+                  item.image,
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 80,
+                      height: 80,
+                      color: Colors.grey[300],
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: Colors.grey,
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 16),
-              // Food Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Food Name
                     Text(
-                      item['name'] ?? 'Unknown Food',
+                      item.name,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -193,13 +179,35 @@ class _MenuCardPageState extends State<MenuCardPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Food Price
+                    Row(
+                      children: [
+                        Text(
+                          priceText,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          discountedPriceText,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
                     Text(
-                      '₹${item['price'] ?? '0'}',
+                      discountText,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
                       ),
                     ),
                   ],

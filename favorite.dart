@@ -15,6 +15,15 @@ class FavoritePage extends StatefulWidget {
 }
 
 class _FavoritePageState extends State<FavoritePage> {
+  late List<Map<String, String>> _localFavoriteItems;
+
+  @override
+  void initState() {
+    super.initState();
+    // Create a local copy of favoriteItems to modify
+    _localFavoriteItems = List.from(widget.favoriteItems);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +31,7 @@ class _FavoritePageState extends State<FavoritePage> {
         title: Text('Favorites'),
         backgroundColor: Colors.green,
       ),
-      body: widget.favoriteItems.isEmpty
+      body: _localFavoriteItems.isEmpty
           ? Center(
         child: Text(
           'No favorite items yet!',
@@ -30,9 +39,9 @@ class _FavoritePageState extends State<FavoritePage> {
         ),
       )
           : ListView.builder(
-        itemCount: widget.favoriteItems.length,
+        itemCount: _localFavoriteItems.length,
         itemBuilder: (context, index) {
-          final item = widget.favoriteItems[index];
+          final item = _localFavoriteItems[index];
           return ListTile(
             leading: Image.asset(item['image']!, width: 50, height: 50),
             title: Text(item['name']!),
@@ -41,7 +50,10 @@ class _FavoritePageState extends State<FavoritePage> {
               icon: Icon(Icons.delete, color: Colors.red),
               onPressed: () {
                 setState(() {
-                  widget.onRemoveFavorite(item['name']!); // Notify HomePage
+                  // Remove item from local list
+                  _localFavoriteItems.removeAt(index);
+                  // Notify HomePage to update its state
+                  widget.onRemoveFavorite(item['name']!);
                 });
               },
             ),

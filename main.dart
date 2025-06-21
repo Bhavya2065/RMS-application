@@ -1,12 +1,15 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:rms_application/mobile_auth.dart';
+import 'package:rms_application/firebase_options.dart';
 import 'package:rms_application/sign_in.dart';
+import 'package:rms_application/sign_up.dart';
 import 'package:rms_application/splash.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
 
@@ -90,7 +93,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => MobileAuth()),
+                  MaterialPageRoute(builder: (context) => SignUpPage()),
                 );
               },
               style: OutlinedButton.styleFrom(
