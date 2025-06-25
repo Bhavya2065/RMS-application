@@ -1,5 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:rms_application/main.dart';
+import 'package:rms_application/sign_in.dart';
+import 'package:rms_application/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -10,11 +15,8 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   String _selectedLanguage = 'English';
-
   final List<String> _languages = ['English', 'Spanish', 'French', 'German'];
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
@@ -30,19 +32,6 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // User Profile Section
-            _buildSectionHeader('User Profile'),
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Edit Profile'),
-              onTap: () {
-                // Navigate to the profile editing screen
-              },
-            ),
-            Divider(
-              thickness: 2,
-            ), // Divider after User Profile
-
             // Notifications Section
             _buildSectionHeader('Notifications'),
             SwitchListTile(
@@ -87,11 +76,9 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildSectionHeader('Theme'),
             SwitchListTile(
               title: Text('Dark Mode'),
-              value: _darkModeEnabled,
+              value: Provider.of<ThemeProvider>(context).isDarkMode,
               onChanged: (value) {
-                setState(() {
-                  _darkModeEnabled = value;
-                });
+                Provider.of<ThemeProvider>(context, listen: false).toggleTheme(value);
               },
             ),
             Divider(
@@ -104,8 +91,8 @@ class _SettingsPageState extends State<SettingsPage> {
               leading: Icon(Icons.logout),
               title: Text('Logout'),
               onTap: () async {
-                await _auth.signOut();
-                // Navigate to the login screen or handle logout logic
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage()));
               },
             ),
             Divider(
@@ -153,13 +140,40 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             TextButton(
               onPressed: () async {
-                // Delete user account from Firebase
+                Navigator.pop(context); // Close dialog
                 User? user = _auth.currentUser;
+
                 if (user != null) {
-                  await user.delete();
-                  // Navigate to the login screen or handle account deletion logic
+                  String uid = user.uid;
+
+                  try {
+                    // Delete user data from Firestore
+                    await FirebaseFirestore.instance.collection('users').doc(uid).delete();
+
+                    // Delete all user's orders
+                    QuerySnapshot orderSnapshot = await FirebaseFirestore.instance
+                        .collection('orders')
+                        .where('userId', isEqualTo: uid)
+                        .get();
+
+                    for (var doc in orderSnapshot.docs) {
+                      await doc.reference.delete();
+                    }
+
+                    // Delete user from Firebase Authentication
+                    await user.delete();
+
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomePage()),
+                    );
+                  } catch (e) {
+                    // Handle error (e.g., requires recent login)
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error deleting account: $e')),
+                    );
+                  }
                 }
-                Navigator.pop(context);
               },
               child: Text(
                 'Delete',

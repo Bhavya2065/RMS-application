@@ -4,20 +4,31 @@ import 'package:rms_application/firebase_options.dart';
 import 'package:rms_application/sign_in.dart';
 import 'package:rms_application/sign_up.dart';
 import 'package:rms_application/splash.dart';
+import 'package:rms_application/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MyApp());
+  runApp(
+      ChangeNotifierProvider(
+        create: (_) => ThemeProvider(),
+        child: MyApp(),
+      ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
       home: Splash(),
     );
   }

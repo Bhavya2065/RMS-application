@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,7 +45,7 @@ class FoodMenuScreen extends StatefulWidget {
 class _FoodMenuScreenState extends State<FoodMenuScreen> {
   List<Product> favoriteItems = [];
   int _selectedIndex = 0;
-  final String username = "John Doe";
+  String _username = "Guest";
   List<Map<String, dynamic>> cartItems = [];
 
   final List<String> banners = [
@@ -53,8 +54,8 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
     'assets/images/banner3.png',
   ];
 
-  final List<String> bannerTexts = [
-    'Book Table for enjoying the delicious Food!',
+  final List<String> bannerText = [
+    'Book Time for enjoying the delicious Food!',
     'Enjoy the Curry Festival with Sambar!',
     'Get 10% Off on Italian Pizza Orders!',
   ];
@@ -62,7 +63,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
   int currentBannerIndex = 0;
   late Timer bannerTimer;
   late PageController _pageController;
-  String searchQuery = "";
+  String searchQuery = '';
   late List<Product> filteredItems;
 
   @override
@@ -80,6 +81,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
       );
     });
     filteredItems = getAllFoodItems();
+    _fetchUsername();
   }
 
   @override
@@ -93,6 +95,27 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
     return foodCategories.values.expand((list) => list).toList();
   }
 
+  Future<void> _fetchUsername() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final uid = user.uid;
+        final snapshot = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+        if (snapshot.exists) {
+          setState(() {
+            _username = snapshot.data()?['username'] ?? "Guest";
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _username = "Guest"; // Fallback on error
+        });
+      }
+    }
+  }
+
+  String get username => _username;
+
   void filterSearchResults(String query) {
     if (query.isEmpty) {
       setState(() {
@@ -101,8 +124,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
     } else {
       setState(() {
         filteredItems = getAllFoodItems()
-            .where((item) =>
-            item.name.toLowerCase().contains(query.toLowerCase()))
+            .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
             .toList();
       });
     }
@@ -175,7 +197,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                 child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 30,
+                      radius: 34,
                       backgroundColor: Colors.white,
                       child: Icon(Icons.person, size: 40, color: Colors.green),
                     ),
@@ -236,18 +258,19 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
               title: Text('Logout'),
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage(),));
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage()));
               },
             ),
             ListTile(
-                leading: Icon(Icons.exit_to_app),
-                title: Text('Exit'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  Future.delayed(Duration(milliseconds: 200), () {
-                    SystemNavigator.pop();
-                  });
-                }),
+              leading: Icon(Icons.exit_to_app),
+              title: Text('Exit'),
+              onTap: () {
+                Navigator.of(context).pop();
+                Future.delayed(Duration(milliseconds: 200), () {
+                  SystemNavigator.pop();
+                });
+              },
+            ),
           ],
         ),
       ),
@@ -262,9 +285,15 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
             icon: Icon(Icons.search, color: Colors.black),
             onPressed: () {
               showSearch(
-                  context: context,
-                  delegate:
-                  FoodSearchDelegate(filteredItems, filterSearchResults));
+                context: context,
+                delegate: FoodSearchDelegate(
+                  filteredItems,
+                  filterSearchResults,
+                  cartItems: cartItems,
+                  addToCart: addToCart,
+                  adjustQuantity: adjustQuantity,
+                ),
+              );
             },
           ),
         ],
@@ -313,7 +342,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                                 gradient: LinearGradient(
                                   colors: [
                                     Colors.black.withOpacity(0.8),
-                                    Colors.transparent
+                                    Colors.transparent,
                                   ],
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
@@ -324,7 +353,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                               bottom: 10,
                               left: 10,
                               child: Text(
-                                bannerTexts[index],
+                                bannerText[index],
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
@@ -344,13 +373,12 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                   right: 0,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: banners.map((url) {
-                      int index = banners.indexOf(url);
+                    children: banners.asMap().entries.map((entry) {
+                      int index = entry.key;
                       return Container(
                         width: 8.0,
                         height: 8.0,
-                        margin: EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 2.0),
+                        margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: currentBannerIndex == index
@@ -423,6 +451,9 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                         _selectedIndex = index;
                       });
                     },
+                    cartItems: cartItems,
+                    addToCart: addToCart,
+                    adjustQuantity: adjustQuantity,
                   ),
                 ),
               );
@@ -432,6 +463,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => OrderPage(
+                    selectedIndex: _selectedIndex,
                     onTabChange: (int index) {
                       setState(() {
                         _selectedIndex = index;
@@ -650,8 +682,7 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
                         onPressed: () {
                           setState(() {
                             if (isFavorite) {
-                              favoriteItems
-                                  .removeWhere((item) => item.name == product.name);
+                              favoriteItems.removeWhere((item) => item.name == product.name);
                             } else {
                               favoriteItems.add(product);
                             }
@@ -796,8 +827,17 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
 class FoodSearchDelegate extends SearchDelegate {
   final List<Product> foodItems;
   final Function(String) onSearch;
+  final List<Map<String, dynamic>> cartItems;
+  final Function(Map<String, dynamic>) addToCart;
+  final Function(Map<String, dynamic>, int) adjustQuantity;
 
-  FoodSearchDelegate(this.foodItems, this.onSearch);
+  FoodSearchDelegate(
+      this.foodItems,
+      this.onSearch, {
+        required this.cartItems,
+        required this.addToCart,
+        required this.adjustQuantity,
+      });
 
   @override
   List<Widget>? buildActions(BuildContext context) {
@@ -832,6 +872,12 @@ class FoodSearchDelegate extends SearchDelegate {
       itemCount: results.length,
       itemBuilder: (context, index) {
         final product = results[index];
+        final cartItem = cartItems.firstWhere(
+              (item) => item['name'] == product.name,
+          orElse: () => {},
+        );
+        final int quantity = cartItem.isNotEmpty ? cartItem['quantity'] : 0;
+
         return ListTile(
           title: Text(product.name),
           subtitle: Row(
@@ -856,6 +902,27 @@ class FoodSearchDelegate extends SearchDelegate {
             ],
           ),
           leading: Image.asset(product.image, width: 50, fit: BoxFit.cover),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetailPage(
+                  product: {
+                    'name': product.name,
+                    'image': product.image,
+                    'price': product.price,
+                    'description': product.description,
+                    'quantity': quantity.toString(),
+                    'discount': product.discount,
+                    'discountedPrice': product.discountedPrice.toStringAsFixed(2),
+                  },
+                  cartItems: cartItems,
+                  addToCart: addToCart,
+                  adjustQuantity: adjustQuantity,
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -871,6 +938,12 @@ class FoodSearchDelegate extends SearchDelegate {
       itemCount: suggestions.length,
       itemBuilder: (context, index) {
         final product = suggestions[index];
+        final cartItem = cartItems.firstWhere(
+              (item) => item['name'] == product.name,
+          orElse: () => {},
+        );
+        final int quantity = cartItem.isNotEmpty ? cartItem['quantity'] : 0;
+
         return ListTile(
           title: Text(product.name),
           subtitle: Row(
@@ -895,6 +968,27 @@ class FoodSearchDelegate extends SearchDelegate {
             ],
           ),
           leading: Image.asset(product.image, width: 50, fit: BoxFit.cover),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetailPage(
+                  product: {
+                    'name': product.name,
+                    'image': product.image,
+                    'price': product.price,
+                    'description': product.description,
+                    'quantity': quantity.toString(),
+                    'discount': product.discount,
+                    'discountedPrice': product.discountedPrice.toStringAsFixed(2),
+                  },
+                  cartItems: cartItems,
+                  addToCart: addToCart,
+                  adjustQuantity: adjustQuantity,
+                ),
+              ),
+            );
+          },
         );
       },
     );

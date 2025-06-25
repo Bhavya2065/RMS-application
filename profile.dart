@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rms_application/feedback_page.dart';
+import 'package:rms_application/help_support_page.dart';
+import 'package:rms_application/order_page.dart';
 import 'package:rms_application/settings.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -67,23 +72,123 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // User Name
-                  const Text(
-                    'John Doe',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  // User Email
-                  const Text(
-                    'john.doe@example.com',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black54,
-                    ),
+                  // User Name and Email
+                  StreamBuilder<User?>(
+                    stream: FirebaseAuth.instance.authStateChanges(),
+                    builder: (context, authSnapshot) {
+                      if (authSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      }
+                      if (!authSnapshot.hasData || authSnapshot.data == null) {
+                        print("No user signed in");
+                        return const Column(
+                          children: [
+                            Text(
+                              'Guest',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'guest@example.com',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      final user = authSnapshot.data!;
+                      return StreamBuilder<DocumentSnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(user.uid)
+                            .snapshots(),
+                        builder: (context, docSnapshot) {
+                          print(
+                              "Firestore Snapshot: ${docSnapshot.connectionState}, Data: ${docSnapshot.data?.data()}");
+                          print("Auth Email: ${user.email}");
+                          if (docSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          }
+                          if (docSnapshot.hasError) {
+                            print("Firestore Error: ${docSnapshot.error}");
+                            return const Column(
+                              children: [
+                                Text(
+                                  'Error loading username',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                SizedBox(height: 5),
+                                Text(
+                                  'Error loading email',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                          if (docSnapshot.hasData && docSnapshot.data!.exists) {
+                            final data = docSnapshot.data!.data()
+                                as Map<String, dynamic>?;
+                            final username = data?['username'] as String? ??
+                                'Anonymous User';
+                            return Column(
+                              children: [
+                                Text(
+                                  username,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  user.email ?? 'No email set',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                          return Column(
+                            children: [
+                              Text(
+                                'Guest',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                user.email ?? 'guest@example.com',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
               ),
@@ -95,17 +200,22 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 children: [
                   buildProfileOption(
-                    icon: Icons.person,
-                    title: 'Edit Profile',
-                    onTap: () {
-                      // Navigate to Edit Profile
-                    },
-                  ),
-                  buildProfileOption(
                     icon: Icons.history,
                     title: 'Order History',
                     onTap: () {
-                      // Navigate to Order History
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrderPage(
+                            selectedIndex: widget.selectedIndex,
+                            // Order History tab
+                            onTabChange: (int index) {
+                              setState(() {
+                              });
+                            },
+                          ),
+                        ),
+                      );
                     },
                   ),
                   buildProfileOption(
@@ -122,14 +232,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     icon: Icons.help_outline,
                     title: 'Help & Support',
                     onTap: () {
-                      // Navigate to Help & Support
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => HelpSupportPage()));
                     },
                   ),
                   buildProfileOption(
                     icon: Icons.logout,
-                    title: 'Logout',
+                    title: 'FeedBack',
                     onTap: () {
-                      // Logic to log out
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackPage()));
                     },
                   ),
                 ],

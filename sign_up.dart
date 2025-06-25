@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rms_application/sign_in.dart';
+import 'package:rms_application/verify_email.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
-
   @override
   State<SignUpPage> createState() => _SignUpPageState();
 }
@@ -18,6 +17,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   void _signUp() async {
     if (_formKey.currentState!.validate()) {
@@ -38,21 +38,24 @@ class _SignUpPageState extends State<SignUpPage> {
           'phone': _phoneController.text.trim(),
         });
 
-        await userCredential.user!.sendEmailVerification();
+        User? user = userCredential.user;
+        if(user != null && !user.emailVerified){
+          await user.sendEmailVerification();
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Verification email sent. Please check your inbox.")));
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => SignInPage()),
+          MaterialPageRoute(builder: (_) => verifyEmailScreen()),
         );
-      } catch (e) {
+      } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Sign up failed: $e")));
+      } finally {
+        setState(() => _isLoading = false);
       }
-
-      setState(() => _isLoading = false);
     }
   }
 
@@ -212,11 +215,24 @@ class _SignUpPageState extends State<SignUpPage> {
                             SizedBox(height: 20),
                             TextFormField(
                               controller: _passwordController,
-                              obscureText: true,
+                              obscureText: _obscurePassword,
                               style: TextStyle(fontSize: 18),
                               decoration: InputDecoration(
                                 hintText: 'Password',
                                 prefixIcon: Icon(Icons.lock, color: Colors.green),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Color(0xFF58A05A),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
                                 contentPadding: EdgeInsets.symmetric(vertical: 15),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -238,11 +254,24 @@ class _SignUpPageState extends State<SignUpPage> {
                             SizedBox(height: 20),
                             TextFormField(
                               controller: _confirmPasswordController,
-                              obscureText: true,
+                              obscureText: _obscurePassword,
                               style: TextStyle(fontSize: 18),
                               decoration: InputDecoration(
                                 hintText: 'Confirm Password',
                                 prefixIcon: Icon(Icons.lock, color: Colors.green),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Color(0xFF58A05A),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
                                 contentPadding: EdgeInsets.symmetric(vertical: 15),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),

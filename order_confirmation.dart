@@ -356,34 +356,38 @@ class OrderConfirmationPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        ElevatedButton.icon(
-          onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => FoodMenuScreen()),
-                  (route) => false,
-            );
-          },
-          icon: const Icon(Icons.home, color: Colors.white),
-          label: const Text(
-            "Back to Home",
-            style: TextStyle(color: Colors.white),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade500,
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => FoodMenuScreen()),
+                    (route) => false,
+              );
+            },
+            icon: const Icon(Icons.home, color: Colors.white),
+            label: const Text(
+              "Back to Home",
+              style: TextStyle(color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade500,
+            ),
           ),
         ),
-        ElevatedButton.icon(
-          onPressed: () async {
-            await _downloadReceipt(context);
-          },
-          icon: const Icon(Icons.download, color: Colors.white),
-          label: const Text(
-            "Download Receipt",
-            style: TextStyle(color: Colors.white),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueAccent,
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              await _downloadReceipt(context);
+            },
+            icon: const Icon(Icons.download, color: Colors.white),
+            label: const Text(
+              "Download Receipt",
+              style: TextStyle(color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+            ),
           ),
         ),
       ],

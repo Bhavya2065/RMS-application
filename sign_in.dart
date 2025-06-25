@@ -4,20 +4,6 @@ import 'package:rms_application/forgot.dart';
 import 'package:rms_application/home_page.dart';
 import 'package:rms_application/sign_up.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SignInPage(),
-    );
-  }
-}
-
 class SignInPage extends StatefulWidget {
   @override
   _SignInPageState createState() => _SignInPageState();
