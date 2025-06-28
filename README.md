@@ -1,6 +1,6 @@
 # 🍽️ RMS Application - Restaurant Table & Food Booking
 
-Welcome to the **RMS Application**, a user-friendly mobile application designed to revolutionize the dining experience! With RMS, users can effortlessly book dining tables and pre-order food at their favorite restaurants, ensuring a seamless and delightful dining experience.
+**Restaurant Table & Food Booking App built with Flutter & Firebase**
 
 ## 🎯 Project Goal
 The RMS Application aims to simplify restaurant reservations and food ordering by allowing users to:
@@ -44,6 +44,7 @@ The RMS Application aims to simplify restaurant reservations and food ordering b
 | ![](UI_images/Admin_menu.jpg) | ![](UI_images/Admin_order.jpg) | ![](UI_images/Admin_booking.jpg) | ![](UI_images/Admin_feedback.jpg) |
 
 📂 [View All Screenshots](./UI_images)
+
 
 
 ## 🚀 Getting Started
