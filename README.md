@@ -27,15 +27,32 @@ The RMS Application aims to simplify restaurant reservations and food ordering b
 - **Firebase Authentication**: Secure user authentication with email, phone, or social logins.
 
 ## 📸 Screenshots
-| Home Page | Menu Page | Add to Cart |
-|-----------|-----------|-------------|
-| ![](UI_images/Home_page.jpg) | ![](UI_images/Menu.jpg) | ![](UI_images/Add_to_cart.jpg) |
+| Splash | Sign Up | Sign In |
+|--------|---------|---------|
+| ![](UI_images/splash.jpg) | ![](UI_images/sign_up.jpg) | ![](UI_images/Sign_in.jpg) |
 
-| Booking Page | Order Confirmation |
-|--------------|--------------------|
-| ![](UI_images/table_booking.jpg) | ![](UI_images/order_confirmation.jpg) |
+| Forgot Password | Home Page | Cart Page |
+|-----------------|-----------|-----------|
+| ![](UI_images/Forgot.jpg) | ![](UI_images/Home_page.jpg) | ![](UI_images/Add_to_cart.jpg) |
+
+| Table Booking | Order Confirmation | Orders Page |
+|---------------|--------------------|--------------|
+| ![](UI_images/table_booking.jpg) | ![](UI_images/order_confirmation.jpg) | ![](UI_images/Orders_page.jpg) |
+
+| Profile Page | Menu Page | Favorites Page |
+|--------------|-----------|----------------|
+| ![](UI_images/profile.jpg) | ![](UI_images/Menu.jpg) | ![](UI_images/favorite.jpg) |
+
+| Admin Dashboard | Admin Menu | Admin Orders |
+|-----------------|------------|---------------|
+| ![](UI_images/Admin.jpg) | ![](UI_images/Admin_menu.jpg) | ![](UI_images/Admin_order.jpg) |
+
+| Admin Booking | Admin Feedback |
+|---------------|----------------|
+| ![](UI_images/Admin_booking.jpg) | ![](UI_images/Admin_feedback.jpg) |
 
 📂 [View All Screenshots](./UI_images)
+
 
 ## 🚀 Getting Started
 Follow these steps to set up and run the RMS Application locally.
