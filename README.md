@@ -27,17 +27,13 @@ The RMS Application aims to simplify restaurant reservations and food ordering b
 - **Firebase Authentication**: Secure user authentication with email, phone, or social logins.
 
 ## 📱 Screenshots
-### Home Screen
-![Home Screen](Images/Home_screen.png)
+| Home | Menu | Cart |
+|------|------|------|
+| ![](UI_images/Home_page.png) | ![](UI_images/Menu.png) | ![](UI_images/Add_to_cart.png) |
 
-### Sign In
-![Sign In](Images/Sign_In.png)
-
-### Sign Up
-![Sign Up](Images/Sign_up.png)
-
-### Splash Screen
-![Splash Screen](Images/Splash_screen.png)
+| Booking | Confirmation |
+|---------|--------------|
+| ![](UI_images/table_booking.png) | ![](UI_images/order_confirmation.png) |
 
 ## 🚀 Getting Started
 Follow these steps to set up and run the RMS Application locally.
