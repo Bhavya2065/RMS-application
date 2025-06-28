@@ -45,7 +45,7 @@ The RMS Application aims to simplify restaurant reservations and food ordering b
 
 📂 [View All Screenshots](./UI_images)
 
-
+---
 
 ## 🚀 Getting Started
 Follow these steps to set up and run the RMS Application locally.
@@ -113,6 +113,8 @@ rms_application/
 ├── pubspec.yaml           # Flutter dependencies and configuration
 └── README.md              # Project documentation
 ```
+
+---
 
 ## 🤝 Contributing
 We welcome contributions to enhance the RMS Application! To contribute:
