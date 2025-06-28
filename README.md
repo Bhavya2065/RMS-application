@@ -26,14 +26,16 @@ The RMS Application aims to simplify restaurant reservations and food ordering b
 - **Firebase Firestore**: Cloud-based NoSQL database for real-time data storage and synchronization.
 - **Firebase Authentication**: Secure user authentication with email, phone, or social logins.
 
-## 📱 Screenshots
-| Home | Menu | Cart |
-|------|------|------|
-| ![](UI_images/Home_page.png) | ![](UI_images/Menu.png) | ![](UI_images/Add_to_cart.png) |
+## 📸 Screenshots
+| Home Page | Menu Page | Add to Cart |
+|-----------|-----------|-------------|
+| ![](UI_images/Home_page.jpg) | ![](UI_images/Menu.jpg) | ![](UI_images/Add_to_cart.jpg) |
 
-| Booking | Confirmation |
-|---------|--------------|
-| ![](UI_images/table_booking.png) | ![](UI_images/order_confirmation.png) |
+| Booking Page | Order Confirmation |
+|--------------|--------------------|
+| ![](UI_images/table_booking.jpg) | ![](UI_images/order_confirmation.jpg) |
+
+📂 [View All Screenshots](./UI_images)
 
 ## 🚀 Getting Started
 Follow these steps to set up and run the RMS Application locally.
