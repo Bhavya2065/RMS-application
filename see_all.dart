@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'add_to_cart.dart'; // Import AddToCartPage
+import 'add_to_cart.dart';
 
 class FoodDetailScreen extends StatefulWidget {
   final String categoryTitle;
@@ -58,7 +58,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                         builder: (context) => AddToCartPage(
                           cartItems: widget.cartItems,
                           onNavigateBack: (int index) {
-                            Navigator.pop(context); // Pop back to FoodDetailScreen
+                            Navigator.pop(
+                                context); // Pop back to FoodDetailScreen
                           },
                         ),
                       ),
@@ -101,26 +102,31 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GridView.builder(
-                physics: BouncingScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: constraints.maxWidth > 600 ? 3 : 2, // optional responsive tweak
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.63,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount:
+                        MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.65, // Adjusted for better fit
+                  ),
+                  itemCount: widget.items.length,
+                  itemBuilder: (context, index) {
+                    final item = widget.items[index];
+                    return buildFoodCard(item);
+                  },
                 ),
-                itemCount: widget.items.length,
-                itemBuilder: (context, index) {
-                  final item = widget.items[index];
-                  return buildFoodCard(item);
-                },
-              ),
-            );
-          },
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -131,113 +137,107 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           (cartItem) => cartItem['name'] == item['name'],
       orElse: () => {},
     );
-    int quantity = cartItem.isNotEmpty ? cartItem['quantity'] : 0;
+    int quantity = cartItem.isNotEmpty ? cartItem['quantity'] as int : 0;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black45,
-                blurRadius: 7,
-                offset: Offset(0, 4),
+    return SizedBox(
+      height: 250,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max, // prevent overflow
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+              child: Image.asset(
+                item['image']!,
+                fit: BoxFit.cover,
+                height: 120,
+                width: double.infinity,
               ),
-            ],
-          ),
-          child: SingleChildScrollView(
-            physics: NeverScrollableScrollPhysics(), // disables scroll inside card
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-                    child: Image.asset(
-                      item['image']!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: 150,
-                    ),
-                  ),
-                  SizedBox(height: 8),
                   Text(
                     item['name']!,
+                    maxLines: 1,                        // ✅ Limit to one line
+                    overflow: TextOverflow.ellipsis,   // ✅ Show "..."
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 14,
                       color: Colors.black,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 8),
                   Text(
-                    'Rs.${item['price']}.00',
-                    textAlign: TextAlign.center,
+                    'Rs.${item['price']}',
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: Colors.green.shade700,
+                      fontSize: 13,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  quantity > 0
-                      ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            widget.adjustQuantity({'name': item['name']}, -1);
+                  const SizedBox(height: 6),
+                  if (quantity > 0)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.remove, size: 18),
+                          onPressed: () {
+                            setState(() {
+                              widget.adjustQuantity({'name': item['name']}, -1);
+                            });
+                          },
+                        ),
+                        Text('$quantity'),
+                        IconButton(
+                          icon: Icon(Icons.add, size: 18),
+                          onPressed: () {
+                            setState(() {
+                              widget.adjustQuantity({'name': item['name']}, 1);
+                            });
+                          },
+                        ),
+                      ],
+                    )
+                  else
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          widget.addToCart({
+                            'name': item['name'],
+                            'image': item['image'],
+                            'price': item['price'],
+                            'discountedPrice': item['price'],
+                            'quantity': 1,
                           });
-                        },
-                        icon: Icon(Icons.remove, color: Colors.black),
-                      ),
-                      Text('$quantity', style: TextStyle(color: Colors.black)),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            widget.adjustQuantity({'name': item['name']}, 1);
-                          });
-                        },
-                        icon: Icon(Icons.add, color: Colors.black),
-                      ),
-                    ],
-                  )
-                      : ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        widget.addToCart({
-                          'name': item['name'],
-                          'image': item['image'],
-                          'price': item['price'],
-                          'discountedPrice': item['price'],
-                          'quantity': 1,
                         });
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        minimumSize: Size(0, 30),
                       ),
+                      child: Text("Add to Cart", style: TextStyle(fontSize: 12, color: Colors.white)),
                     ),
-                    child: Text(
-                      'Add to Cart',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
                 ],
               ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }

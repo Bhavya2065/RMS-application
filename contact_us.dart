@@ -1,29 +1,41 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Contact Us',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: ContactUsPage(),
-    );
-  }
-}
-
-class ContactUsPage extends StatelessWidget {
+class ContactUsPage extends StatefulWidget {
   ContactUsPage({super.key});
 
-  final _formKey = GlobalKey<FormState>();
+  @override
+  State<ContactUsPage> createState() => _ContactUsPageState();
+}
+
+class _ContactUsPageState extends State<ContactUsPage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _feedbackController = TextEditingController();
+
+  Future<void> _submitFeedback() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || _feedbackController.text.trim().isEmpty) return;
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final username = userDoc.data()?['username'] ?? 'User';
+
+
+    await FirebaseFirestore.instance.collection('feedbacks').add({
+      'uid': user.uid,
+      'email': user.email,
+      'username': username,
+      'message': _feedbackController.text.trim(),
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    setState(() {
+      _feedbackController.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Feedback submitted successfully')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,16 +122,7 @@ class ContactUsPage extends StatelessWidget {
                     child: Column(
                       children: [
                         CustomTextField(
-                          hintText: 'Your Name',
-                          icon: Icons.person,
-                        ),
-                        SizedBox(height: 10),
-                        CustomTextField(
-                          hintText: 'Your Email',
-                          icon: Icons.email,
-                        ),
-                        SizedBox(height: 10),
-                        CustomTextField(
+                          controller: _feedbackController, // add this
                           hintText: 'Your Message',
                           icon: Icons.message,
                           maxLines: 4,
@@ -138,12 +141,7 @@ class ContactUsPage extends StatelessWidget {
                           ),
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Message Sent Successfully!'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
+                              _submitFeedback();
                             }
                           },
                           child: Text(
@@ -197,13 +195,19 @@ class CustomTextField extends StatelessWidget {
   final String hintText;
   final IconData icon;
   final int maxLines;
+  final TextEditingController controller;
 
-  CustomTextField(
-      {required this.hintText, required this.icon, this.maxLines = 1});
+  CustomTextField({
+    required this.hintText,
+    required this.icon,
+    required this.controller,
+    this.maxLines = 1,
+  });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      controller: controller,
       maxLines: maxLines,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.green),
@@ -224,3 +228,4 @@ class CustomTextField extends StatelessWidget {
     );
   }
 }
+

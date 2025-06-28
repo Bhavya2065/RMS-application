@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'order_confirmation.dart';
 
 class TableBookingPage extends StatefulWidget {
@@ -57,10 +58,10 @@ class _TableBookingPageState extends State<TableBookingPage> {
       final selectedDateTime = DateTime(
           now.year, now.month, now.day, pickedTime.hour, pickedTime.minute);
       final currentTime =
-          DateTime(now.year, now.month, now.day, now.hour, now.minute);
+      DateTime(now.year, now.month, now.day, now.hour, now.minute);
       final startTime =
-          DateTime(now.year, now.month, now.day, 11, 0); // 11:00 AM
-      final endTime = DateTime(now.year, now.month, now.day, 23, 0); // 11:00 PM
+      DateTime(now.year, now.month, now.day, 11, 0);
+      final endTime = DateTime(now.year, now.month, now.day, 24, 0);
       if (selectedDateTime.isAfter(currentTime) &&
           selectedDateTime.isAfter(startTime) &&
           selectedDateTime.isBefore(endTime)) {
@@ -71,7 +72,7 @@ class _TableBookingPageState extends State<TableBookingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(selectedDateTime.isAfter(currentTime)
-                  ? "Please select a time between 11:00 AM and 11:00 PM"
+                  ? "Please select a time between 11:00 AM and 12:00 PM"
                   : "Please select a time after the current time")),
         );
       }
@@ -93,7 +94,6 @@ class _TableBookingPageState extends State<TableBookingPage> {
   bool canAddTable(int tableNumber) {
     final newCapacity =
         getTotalCapacity() + (tableCapacities[tableNumber] ?? 0);
-    // Allow capacity to match _peopleCount or exceed by at most 1
     return newCapacity <= _peopleCount + 1;
   }
 
@@ -117,7 +117,6 @@ class _TableBookingPageState extends State<TableBookingPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        /// Your existing widgets (Text, TimePicker, Buttons etc.)
                         const Text("Select Number of People",
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold)),
@@ -217,14 +216,12 @@ class _TableBookingPageState extends State<TableBookingPage> {
                           ],
                         ),
                         const SizedBox(height: 10),
-
-                        /// Use a fixed-height container to constrain GridView:
                         SizedBox(
-                          height: 300, // 👈 adjust as needed, or use MediaQuery
+                          height: 300,
                           child: GridView.builder(
                             physics: const NeverScrollableScrollPhysics(),
                             gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 4,
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10,
@@ -233,48 +230,48 @@ class _TableBookingPageState extends State<TableBookingPage> {
                             itemBuilder: (context, index) {
                               int tableNumber = index + 1;
                               bool isBooked =
-                                  bookedTables.contains(tableNumber);
+                              bookedTables.contains(tableNumber);
                               bool isSelected =
-                                  selectedTables.contains(tableNumber);
+                              selectedTables.contains(tableNumber);
                               return GestureDetector(
                                 onTap: isBooked
                                     ? () {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content: Text(
-                                                  "Table $tableNumber is already booked")),
-                                        );
-                                      }
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            "Table $tableNumber is already booked")),
+                                  );
+                                }
                                     : () {
-                                        setState(() {
-                                          if (isSelected) {
-                                            selectedTables.remove(tableNumber);
-                                          } else if (canAddTable(tableNumber)) {
-                                            selectedTables.add(tableNumber);
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      "Table $tableNumber exceeds required capacity")),
-                                            );
-                                          }
-                                        });
-                                      },
+                                  setState(() {
+                                    if (isSelected) {
+                                      selectedTables.remove(tableNumber);
+                                    } else if (canAddTable(tableNumber)) {
+                                      selectedTables.add(tableNumber);
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                "Table $tableNumber exceeds required capacity")),
+                                      );
+                                    }
+                                  });
+                                },
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: isBooked
                                         ? Colors.redAccent
                                         : (isSelected
-                                            ? Colors.greenAccent
-                                            : Colors.blueAccent),
+                                        ? Colors.greenAccent
+                                        : Colors.blueAccent),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Center(
                                     child: Column(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      MainAxisAlignment.center,
                                       children: [
                                         Text("Table $tableNumber",
                                             style: const TextStyle(
@@ -293,8 +290,6 @@ class _TableBookingPageState extends State<TableBookingPage> {
                             },
                           ),
                         ),
-
-                        /// Below Grid: Capacity check + Confirmation Button
                         if (!hasSufficientCapacity()) ...[
                           const SizedBox(height: 10),
                           const Text(
@@ -324,7 +319,7 @@ class _TableBookingPageState extends State<TableBookingPage> {
                                   : () async {
                                 await storeOrderToFirestore(
                                   cartItems: widget.cartItems,
-                                  tableNumber: selectedTables.first, // Or handle multiple if needed
+                                  tableNumber: selectedTables.first,
                                   numberOfPersons: _peopleCount,
                                   arrivalTime: DateTime(
                                     DateTime.now().year,
@@ -339,15 +334,16 @@ class _TableBookingPageState extends State<TableBookingPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => OrderConfirmationPage(
-                                      peopleCount: _peopleCount,
-                                      selectedTime: _selectedTime!,
-                                      selectedTables: selectedTables,
-                                      cartItems: widget.cartItems,
-                                      subtotal: widget.subtotal,
-                                      gst: widget.gst,
-                                      total: widget.total,
-                                    ),
+                                    builder: (context) =>
+                                        OrderConfirmationPage(
+                                          peopleCount: _peopleCount,
+                                          selectedTime: _selectedTime!,
+                                          selectedTables: selectedTables,
+                                          cartItems: widget.cartItems,
+                                          subtotal: widget.subtotal,
+                                          gst: widget.gst,
+                                          total: widget.total,
+                                        ),
                                   ),
                                 );
                               },
@@ -386,11 +382,19 @@ Future<void> storeOrderToFirestore({
   final user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
-    await FirebaseFirestore.instance
+    final uid = user.uid;
+    final uuid = Uuid();
+    final orderId = uuid.v4(); // Generate unique orderId
+
+    final usernameDoc = await FirebaseFirestore.instance
         .collection('users')
-        .doc(user.uid)
-        .collection('orders')
-        .add({
+        .doc(uid)
+        .get();
+    final username = usernameDoc.data()?['username'] ?? 'User';
+
+    final orderData = {
+      'uid': uid,
+      'username': username,
       'cartItems': cartItems,
       'tableNumber': tableNumber,
       'numberOfPersons': numberOfPersons,
@@ -398,6 +402,15 @@ Future<void> storeOrderToFirestore({
       'totalAmount': totalAmount,
       'status': 'pending',
       'orderTime': Timestamp.now(),
-    });
+      'orderId': orderId, // Include orderId in the data
+    };
+
+    // Save to users/userId/orders with the generated orderId
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('orders')
+        .doc(orderId)
+        .set(orderData);
   }
 }

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rms_application/forgot.dart';
 import 'package:rms_application/home_page.dart';
 import 'package:rms_application/sign_up.dart';
+import 'package:rms_application/admin_home_page.dart';
 
 class SignInPage extends StatefulWidget {
+  const SignInPage({super.key});
+
   @override
   _SignInPageState createState() => _SignInPageState();
 }
@@ -25,7 +29,9 @@ class _SignInPageState extends State<SignInPage> {
 
   void _forgotPassword() {
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => EmailAuthPage()));
+      context,
+      MaterialPageRoute(builder: (context) => EmailAuthPage()),
+    );
   }
 
   void _signIn() async {
@@ -33,7 +39,7 @@ class _SignInPageState extends State<SignInPage> {
       setState(() => _isLoading = true);
       try {
         UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -43,23 +49,42 @@ class _SignInPageState extends State<SignInPage> {
         if (user != null) {
           if (!user.emailVerified) {
             Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => SignUpPage()));
+              context,
+              MaterialPageRoute(builder: (context) => SignUpPage()),
+            );
           } else {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => FoodMenuScreen()));
+            // Fetch role from Firestore
+            final uid = user.uid;
+            final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+            final role = doc.data()?['role'] ?? 'user'; // Default to 'user' if role is null
+
+            // Navigate based on role
+            if (role == 'admin') {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => AdminHomePage()),
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => FoodMenuScreen()),
+              );
+            }
           }
         }
       } on FirebaseAuthException catch (e) {
+        String message;
         if (e.code == 'wrong-password') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Wrong password. Please try again.')),
-          );
+          message = 'Wrong password. Please try again.';
         } else if (e.code == 'user-not-found' ||
             e.code == 'invalid-credential') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('User not found with this credentials')),
-          );
+          message = 'User not found with this credentials';
+        } else {
+          message = 'Sign in failed: ${e.message}';
         }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Sign in failed: $e')),
@@ -78,7 +103,6 @@ class _SignInPageState extends State<SignInPage> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: Stack(
             children: [
-              // Fixed background image
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -89,7 +113,6 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                 ),
               ),
-              // Overlay for dimming effect
               Positioned.fill(
                 child: Container(
                   color: Colors.black.withOpacity(0.4),
@@ -103,8 +126,7 @@ class _SignInPageState extends State<SignInPage> {
                     padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Color(0xFFEAF1DF),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20)),
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black12,
@@ -114,14 +136,14 @@ class _SignInPageState extends State<SignInPage> {
                       ],
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: EdgeInsets.all(8.0),
                       child: Form(
                         key: _formKey,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.all(8.0),
+                              padding: EdgeInsets.all(8.0),
                               child: Text(
                                 'Sign In',
                                 style: TextStyle(
@@ -138,17 +160,14 @@ class _SignInPageState extends State<SignInPage> {
                               style: TextStyle(fontSize: 18),
                               decoration: InputDecoration(
                                 hintText: 'Email',
-                                prefixIcon:
-                                    Icon(Icons.email, color: Colors.green),
-                                contentPadding:
-                                    EdgeInsets.symmetric(vertical: 15),
+                                prefixIcon: Icon(Icons.email, color: Colors.green),
+                                contentPadding: EdgeInsets.symmetric(vertical: 15),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                      color: Colors.black54, width: 2),
+                                  borderSide: BorderSide(color: Colors.black54, width: 2),
                                 ),
                               ),
                               validator: (value) {
@@ -156,7 +175,7 @@ class _SignInPageState extends State<SignInPage> {
                                 if (email == null || email.isEmpty) {
                                   return 'Please enter your email address';
                                 } else if (!RegExp(
-                                        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                                    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
                                     .hasMatch(email)) {
                                   return 'Please enter a valid email address';
                                 }
@@ -170,8 +189,7 @@ class _SignInPageState extends State<SignInPage> {
                               style: TextStyle(fontSize: 18),
                               decoration: InputDecoration(
                                 hintText: 'Password',
-                                prefixIcon:
-                                    Icon(Icons.lock, color: Colors.green),
+                                prefixIcon: Icon(Icons.lock, color: Colors.green),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
@@ -185,15 +203,13 @@ class _SignInPageState extends State<SignInPage> {
                                     });
                                   },
                                 ),
-                                contentPadding:
-                                    EdgeInsets.symmetric(vertical: 15),
+                                contentPadding: EdgeInsets.symmetric(vertical: 15),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                      color: Colors.black54, width: 2),
+                                  borderSide: BorderSide(color: Colors.black54, width: 2),
                                 ),
                               ),
                               validator: (value) {
@@ -222,30 +238,27 @@ class _SignInPageState extends State<SignInPage> {
                             SizedBox(height: 20),
                             _isLoading
                                 ? Center(
-                                    child: CircularProgressIndicator(
-                                        color: Colors.green))
+                                child: CircularProgressIndicator(color: Colors.green))
                                 : SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: _signIn,
-                                      style: ElevatedButton.styleFrom(
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 15),
-                                        backgroundColor: Colors.green,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'Sign In',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _signIn,
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 15),
+                                  backgroundColor: Colors.green,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
+                                ),
+                                child: Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
                             SizedBox(height: 10),
                             TextButton(
                               onPressed: () {
@@ -258,11 +271,10 @@ class _SignInPageState extends State<SignInPage> {
                               },
                               child: Text(
                                 'Don’t have an account? Sign up',
-                                style: TextStyle(
-                                    color: Colors.green, fontSize: 16),
+                                style: TextStyle(color: Colors.green, fontSize: 16),
                               ),
                             ),
-                            SizedBox(height: 20), // Extra padding at the bottom
+                            SizedBox(height: 20),
                           ],
                         ),
                       ),

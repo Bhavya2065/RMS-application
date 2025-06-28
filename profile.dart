@@ -239,7 +239,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     icon: Icons.logout,
                     title: 'FeedBack',
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackPage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => UserFeedbackPage()));
                     },
                   ),
                 ],

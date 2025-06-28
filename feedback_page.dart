@@ -1,66 +1,69 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class FeedbackPage extends StatefulWidget {
+class UserFeedbackPage extends StatefulWidget {
+  const UserFeedbackPage({super.key});
+
   @override
-  _FeedbackPageState createState() => _FeedbackPageState();
+  State<UserFeedbackPage> createState() => _UserFeedbackPageState();
 }
 
-class _FeedbackPageState extends State<FeedbackPage> {
+class _UserFeedbackPageState extends State<UserFeedbackPage> {
   final TextEditingController _feedbackController = TextEditingController();
+  bool _isSubmitting = false;
 
-  void _submitFeedback() {
-    final feedback = _feedbackController.text.trim();
+  Future<void> _submitFeedback() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || _feedbackController.text.trim().isEmpty) return;
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final username = userDoc.data()?['username'] ?? 'User';
 
-    if (feedback.isNotEmpty) {
-      // You can also send feedback to Firebase or server here
+    setState(() => _isSubmitting = true);
 
-      _feedbackController.clear(); // Clear the text field
+    await FirebaseFirestore.instance.collection('feedbacks').add({
+      'uid': user.uid,
+      'email': user.email,
+      'username': username,
+      'message': _feedbackController.text.trim(),
+      'timestamp': FieldValue.serverTimestamp(),
+    });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Feedback submitted successfully!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter feedback before submitting.')),
-      );
-    }
+    setState(() {
+      _isSubmitting = false;
+      _feedbackController.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Feedback submitted successfully')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: Text('Feedback'),
-        backgroundColor: Colors.green,
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Submit Feedback'), backgroundColor: Colors.green),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(
-              'We value your feedback. Please let us know your thoughts below:',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 16),
+            const Text("We value your feedback!", style: TextStyle(fontSize: 18)),
+            const SizedBox(height: 20),
             TextField(
               controller: _feedbackController,
               maxLines: 5,
               decoration: InputDecoration(
                 hintText: 'Type your feedback here...',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
-            SizedBox(height: 16),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 24, vertical: 12),
-                backgroundColor: Colors.green,
-              ),
-              onPressed: _submitFeedback,
-              icon: Icon(Icons.send, color: Colors.white,),
-              label: Text('Submit', style: TextStyle(color: Colors.white),),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _isSubmitting ? null : _submitFeedback,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: _isSubmitting
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Submit", style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
