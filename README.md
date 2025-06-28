@@ -133,4 +133,10 @@ For questions or feedback, reach out to:
 
 ---
 
+## 📦 Download APK
+
+[Click here to download the latest RMS App APK](https://github.com/Bhavya2065/RMS-application/releases/latest)
+
+---
+
 ⭐ **Star this repository** if you find it helpful! Let's make dining easier and more enjoyable together! 🍴
