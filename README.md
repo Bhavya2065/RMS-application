@@ -27,29 +27,21 @@ The RMS Application aims to simplify restaurant reservations and food ordering b
 - **Firebase Authentication**: Secure user authentication with email, phone, or social logins.
 
 ## 📸 Screenshots
-| Splash | Sign Up | Sign In |
-|--------|---------|---------|
-| ![](UI_images/splash.jpg) | ![](UI_images/sign_up.jpg) | ![](UI_images/Sign_in.jpg) |
+| Sign Up | Sign In | Forgot Password | Home Page |
+|---------|---------|------------------|------------|
+| ![](UI_images/sign_up.jpg) | ![](UI_images/Sign_in.jpg) | ![](UI_images/Forgot.jpg) | ![](UI_images/Home_page.jpg) |
 
-| Forgot Password | Home Page | Cart Page |
-|-----------------|-----------|-----------|
-| ![](UI_images/Forgot.jpg) | ![](UI_images/Home_page.jpg) | ![](UI_images/Add_to_cart.jpg) |
+| Cart Page | Table Booking | Order Confirmation | Orders Page |
+|-----------|----------------|--------------------|-------------|
+| ![](UI_images/Add_to_cart.jpg) | ![](UI_images/table_booking.jpg) | ![](UI_images/order_confirmation.jpg) | ![](UI_images/Orders_page.jpg) |
 
-| Table Booking | Order Confirmation | Orders Page |
-|---------------|--------------------|--------------|
-| ![](UI_images/table_booking.jpg) | ![](UI_images/order_confirmation.jpg) | ![](UI_images/Orders_page.jpg) |
+| Profile Page | Menu Page | Favorites Page | Admin Dashboard |
+|--------------|-----------|----------------|------------------|
+| ![](UI_images/profile.jpg) | ![](UI_images/Menu.jpg) | ![](UI_images/favorite.jpg) | ![](UI_images/Admin.jpg) |
 
-| Profile Page | Menu Page | Favorites Page |
-|--------------|-----------|----------------|
-| ![](UI_images/profile.jpg) | ![](UI_images/Menu.jpg) | ![](UI_images/favorite.jpg) |
-
-| Admin Dashboard | Admin Menu | Admin Orders |
-|-----------------|------------|---------------|
-| ![](UI_images/Admin.jpg) | ![](UI_images/Admin_menu.jpg) | ![](UI_images/Admin_order.jpg) |
-
-| Admin Booking | Admin Feedback |
-|---------------|----------------|
-| ![](UI_images/Admin_booking.jpg) | ![](UI_images/Admin_feedback.jpg) |
+| Admin Menu | Admin Orders | Admin Booking | Admin Feedback |
+|------------|--------------|----------------|-----------------|
+| ![](UI_images/Admin_menu.jpg) | ![](UI_images/Admin_order.jpg) | ![](UI_images/Admin_booking.jpg) | ![](UI_images/Admin_feedback.jpg) |
 
 📂 [View All Screenshots](./UI_images)
 
